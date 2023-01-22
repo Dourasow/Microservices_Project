@@ -8,6 +8,7 @@ import com.microservices.model.OrderItemList;
 import com.microservices.repository.OrderRepository;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerWebClientBuilderBeanPostProcessor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -22,7 +23,7 @@ import java.util.UUID;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final WebClient webClient;
+    private final WebClient.Builder webClientBuilder;
 
     public void placeOrder(OrderRequest orderRequest){
         Order order = new Order();
@@ -39,8 +40,8 @@ public class OrderService {
                 .toList();
 
         //Call Inventory service and place order if product is in stock
-        InventoryResponse[] inventoryResponsesArray = webClient.get()
-                        .uri("http://localhost:8085/api/inventory",
+        InventoryResponse[] inventoryResponsesArray = webClientBuilder.build().get()
+                        .uri("http://inventory-service/api/inventory",
                                 uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
                                 .retrieve()
                                         .bodyToMono(InventoryResponse[].class)
